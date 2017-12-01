@@ -86,9 +86,10 @@ static int fifo_open(struct inode* _inode, struct file* _file){
 
 static ssize_t fifo_read(struct file* _file, char* user_buffer, size_t number_of_chars_to_be_read, loff_t* offset){
 	int user_buffer_index = 0;
-	
-	down_interruptible(&read_op_mutex);
+
 	down_interruptible(&full);
+	down_interruptible(&read_op_mutex);
+
 	
 	read_index %= buffer_size;
 	
@@ -102,8 +103,8 @@ static ssize_t fifo_read(struct file* _file, char* user_buffer, size_t number_of
 	++read_index;
 	++buffer_empty_slots;
 	
-	up(&empty);
 	up(&read_op_mutex);
+	up(&empty);
 	
 	return user_buffer_index;
 }
@@ -112,8 +113,9 @@ static ssize_t fifo_write(struct file* _file, const char* user_buffer, size_t nu
 	int user_buffer_index = 0;
 	int i = 0;
 
-	down_interruptible(&write_op_mutex);
 	down_interruptible(&empty);
+	down_interruptible(&write_op_mutex);
+	
 	
 	write_index %= buffer_size;
 	
@@ -127,8 +129,8 @@ static ssize_t fifo_write(struct file* _file, const char* user_buffer, size_t nu
 	++write_index;
 	--buffer_empty_slots;
 	
-	up(&full);
 	up(&write_op_mutex);
+	up(&full);
 	
 	return user_buffer_index;
 }
